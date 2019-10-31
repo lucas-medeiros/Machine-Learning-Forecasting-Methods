@@ -8,6 +8,7 @@ library(psych)
 library(mvtnorm)
 library(excelR)
 library(elmNNRcpp)
+library(readxl)
 
 
 ##define diretório correto: (modificar para a pasta que estão os arquivos)

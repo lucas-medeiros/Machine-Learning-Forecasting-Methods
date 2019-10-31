@@ -8,6 +8,7 @@ library(psych)
 library(mvtnorm)
 library(excelR)
 library(elmNNRcpp)
+library(readxl)
 
 
 ##define diretório correto: (modificar para a pasta que estão os arquivos)
@@ -49,6 +50,7 @@ plot.ts(dados_forecast$residuals) #para estimar a qualidade do modelo
 #alterar o caminho do arquivo para o diretório atual
 #USAR A OPÇÃO do RStudio: 'Import Dataset" -> 'From Excel" -> escolher arquivo
 dataset_biodiesel_MATRIX <- read_excel("~/Facul/Iniciação Científica/Códigos R/dataset_biodiesel_MATRIX.xlsx")
+
 
 #descarta a primeira coluna (nomes)
 dados <- dataset_biodiesel_MATRIX %>% select(-1)
