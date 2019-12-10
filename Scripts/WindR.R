@@ -121,6 +121,7 @@ lambdas_to_try <- 10^seq(-3, 5, length.out = 100)
 # alpha = 1 para -> lasso regression
 lasso_cv <- cv.glmnet(X, y, family = "gaussian", alpha = 1, lambda = lambdas_to_try,
                       standardize = TRUE, nfolds = 10)
+
 # Plot do resultado da validação cruzada, destacando o valor mínimo do erro médio quadrático
 plot(lasso_cv)
 
@@ -159,34 +160,62 @@ dados <- read.csv("dataset_wind_.txt", header = T, sep = "\t", dec = ",")
 
 
 y <- dados %>% select(Power) %>% as.matrix()
-X <- dados %>% select(-Power) %>% as.matrix()
+x <- dados %>% select(-Power) %>% as.matrix()
 
 y <- dados %>% select(Generator_Temp1) %>% as.matrix()
-X <- dados %>% select(-Generator_Temp1) %>% as.matrix()
+x <- dados %>% select(-Generator_Temp1) %>% as.matrix()
 
 y <- dados %>% select(Generator_Temp2) %>% as.matrix()
-X <- dados %>% select(-Generator_Temp2) %>% as.matrix()
+x <- dados %>% select(-Generator_Temp2) %>% as.matrix()
 
 y <- dados %>% select(Generator_Speed) %>% as.matrix()
-X <- dados %>% select(-Generator_Speed) %>% as.matrix()
+x <- dados %>% select(-Generator_Speed) %>% as.matrix()
 
 y <- dados %>% select(Wind_Speed) %>% as.matrix()
-X <- dados %>% select(-Wind_Speed) %>% as.matrix()
+x <- dados %>% select(-Wind_Speed) %>% as.matrix()
 
 y <- dados %>% select(WindDir) %>% as.matrix()
-X <- dados %>% select(-WindDir) %>% as.matrix()
+x <- dados %>% select(-WindDir) %>% as.matrix()
 
 y <- dados %>% select(Nacelle) %>% as.matrix()
-X <- dados %>% select(-Nacelle) %>% as.matrix()
+x <- dados %>% select(-Nacelle) %>% as.matrix()
 
 y <- dados %>% select(Temperature) %>% as.matrix()
-X <- dados %>% select(-Temperature) %>% as.matrix()
+x <- dados %>% select(-Temperature) %>% as.matrix()
 
 
-out_regr = elm_train(X, y, nhid = 20, actfun = 'purelin', init_weights = 'uniform_negative')
+# Divide dataset em duas partes - 70% dos dados <- treinamento e 30% <- teste
+#----------------------------------------
 
-plot(out_regr$fitted_values)
-plot(out_regr$predictions)
-plot(out_regr$residuals)
+dados07 = round(nrow(y)*0.7)                          #retorna número inteiro que representa 70% dos valores disponíveis
+
+xtr = x[1:dados07, ]                                  #seleciona parte de treinamento
+xte = x[(dados07 + 1):nrow(x), ]                      #seleciona parte de teste
+
+ytr = matrix(y[1:dados07, ], ncol = 1)                #seleciona parte de treinamento de y
+yte = matrix(y[(dados07 + 1):nrow(y), ], ncol = 1)    #seleciona parte de teste de y
+
+
+## perform a fit and predict [ elmNNRcpp ]
+#----------------------------------------
+#função de ativação <- sigmoid
+#k-folds <- 5 folds
+
+fit_elm = elm_train(xtr, ytr, nhid = 5, actfun = 'sig', init_weights = "uniform_negative", bias = TRUE, verbose = T)
+
+pr_te_elm = elm_predict(fit_elm, xte)
+
+
+# evaluation metric
+#----------------------------------------
+rmse = function (y_true, y_pred) {                  #para o cálculo dos resíduos <- erro médio quadrático
+  out = sqrt(mean((y_true - y_pred)^2))
+  out
+}
+
+
+# mean-squared-error for 'elm'
+#--------------------------------------
+cat('Erro médio quadrático para Extreme Machine Learning é: ', rmse(yte, pr_te_elm[, 1]), '\n')
 
 

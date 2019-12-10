@@ -120,20 +120,47 @@ dados <- read.csv("dataset_solar_plant.txt", header = T, sep = "\t", dec = ",")
 #-----------
 
 y <- dados %>% select(Meter) %>% as.matrix()
-X <- dados %>% select(-Meter) %>% as.matrix()
+x <- dados %>% select(-Meter) %>% as.matrix()
 
 y <- dados %>% select(Temperature) %>% as.matrix()
-X <- dados %>% select(-Temperature) %>% as.matrix()
+x <- dados %>% select(-Temperature) %>% as.matrix()
 
 y <- dados %>% select(Radiation) %>% as.matrix()
-X <- dados %>% select(-Radiation) %>% as.matrix()
+x <- dados %>% select(-Radiation) %>% as.matrix()
 
-#N/A data error expected double
-out_regr = elm_train(X, y, nhid = 20, actfun = 'purelin', init_weights = 'uniform_negative')
 
-plot(out_regr$fitted_values)
-plot(out_regr$predictions)
-plot(out_regr$residuals)
+# Divide dataset em duas partes - 70% dos dados <- treinamento e 30% <- teste
+#----------------------------------------
 
+dados07 = round(nrow(y)*0.7)                          #retorna número inteiro que representa 70% dos valores disponíveis
+
+xtr = x[1:dados07, ]                                  #seleciona parte de treinamento
+xte = x[(dados07 + 1):nrow(x), ]                      #seleciona parte de teste
+
+ytr = matrix(y[1:dados07, ], ncol = 1)                #seleciona parte de treinamento de y
+yte = matrix(y[(dados07 + 1):nrow(y), ], ncol = 1)    #seleciona parte de teste de y
+
+
+## perform a fit and predict [ elmNNRcpp ]
+#----------------------------------------
+#função de ativação <- sigmoid
+#k-folds <- 5 folds
+
+fit_elm = elm_train(xtr, ytr, nhid = 5, actfun = 'sig', init_weights = "uniform_negative", bias = TRUE, verbose = T)
+
+pr_te_elm = elm_predict(fit_elm, xte)
+
+
+# evaluation metric
+#----------------------------------------
+rmse = function (y_true, y_pred) {                  #para o cálculo dos resíduos <- erro médio quadrático
+  out = sqrt(mean((y_true - y_pred)^2))
+  out
+}
+
+
+# mean-squared-error for 'elm'
+#--------------------------------------
+cat('Erro médio quadrático para Extreme Machine Learning é: ', rmse(yte, pr_te_elm[, 1]), '\n')
 
 
